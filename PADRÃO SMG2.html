@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<!-- saved from url=(0067)file:///C:/Users/caioh/OneDrive/Desktop/remixed-bf30ab09%20(1).html -->
+<html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>Painel de Rotas — SMG2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link href="./Painel de Rotas — SMG2_files/css2" rel="stylesheet">
+<script src="./Painel de Rotas — SMG2_files/xlsx.full.min.js.download"></script>
+<style>
+  :root{
+    --bg: #EAF2FB;
+    --panel: #FFFFFF;
+    --panel-2: #E3EFFB;
+    --line: #C9DEF2;
+    --text: #16273B;
+    --muted: #5D7C97;
+    --accent: #3B93E0;
+    --good: #1FA971;
+    --warn: #E39A1F;
+    --bad: #E2554F;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;}
+  ::selection{background:var(--accent);color:#ffffff;}
+
+  .wrap{max-width:1900px;margin:0 auto;padding:24px 24px 50px;}
+
+  /* HEADER */
+  header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:26px;flex-wrap:wrap;}
+  .brand-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 6px;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;margin:0 0 4px;letter-spacing:-.01em;}
+  .sub{color:var(--muted);font-size:13.5px;margin:0;}
+  .sub span{color:var(--text);font-family:var(--mono);}
+
+  .import-zone{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+  .btn-import{
+    display:flex;align-items:center;gap:8px;
+    background:var(--accent);color:#ffffff;border:none;
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13.5px;
+    padding:11px 16px;border-radius:8px;cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease;
+    box-shadow:0 0 0 0 rgba(59,147,224,.4);
+  }
+  .btn-import:hover{transform:translateY(-1px);box-shadow:0 6px 16px -4px rgba(59,147,224,.5);}
+  .btn-import:active{transform:translateY(0);}
+  .btn-import svg{width:15px;height:15px;flex:none;}
+  #file-input{display:none;}
+
+  .btn-undo{
+    display:flex;align-items:center;gap:7px;
+    background:transparent;color:var(--accent);border:1px solid var(--line);
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12.5px;
+    padding:8px 14px;border-radius:8px;cursor:pointer;
+    transition:background .12s ease, border-color .12s ease;
+  }
+  .btn-undo svg{width:13px;height:13px;flex:none;}
+  .btn-undo:hover:not(:disabled){background:var(--panel-2);border-color:var(--accent);}
+  .btn-undo:disabled{color:var(--muted);border-color:var(--line);cursor:not-allowed;opacity:.55;}
+
+  .import-hint{font-family:var(--mono);font-size:10.5px;color:var(--muted);}
+  .import-status{font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:5px;display:none;}
+  .import-status.ok{display:inline-block;background:rgba(52,211,153,.12);color:var(--good);}
+  .import-status.err{display:inline-block;background:rgba(240,101,75,.12);color:var(--bad);}
+
+  /* KPI CARDS */
+  .kpis{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin-bottom:22px;}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;position:relative;overflow:hidden;}
+  .kpi::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--kpi-color, var(--accent));}
+  .kpi-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px;font-weight:700;}
+  .kpi-value{font-family:var(--mono);font-size:26px;font-weight:600;margin:0;line-height:1;}
+  .kpi-value small{font-size:13px;color:var(--muted);font-weight:400;}
+  .kpi-note{font-family:var(--mono);font-size:11px;color:var(--muted);margin:6px 0 0;}
+
+  /* PANEL */
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:20px;}
+  .panel-head{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line);gap:12px;flex-wrap:wrap;}
+  .panel-head h2{font-family:'Space Grotesk',sans-serif;font-size:15px;margin:0;font-weight:600;}
+  .panel-sub{font-size:11.5px;color:var(--muted);margin:3px 0 0;}
+  .panel-head-text{display:flex;flex-direction:column;}
+  .panel-head .count{font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:nowrap;}
+
+  /* FLEET PANEL */
+  .fleet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;padding:16px 18px;}
+  .fleet-item{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;
+  }
+  .fleet-item.has-target{justify-content:space-between;}
+  .fleet-target-count{font-family:var(--mono);font-size:16px;font-weight:600;}
+  .fleet-target-count b{color:var(--text);}
+  .fleet-num.bad{color:var(--bad);}
+  .fleet-num.warn{color:var(--warn);}
+  .fleet-num.good{color:var(--good);}
+  .fleet-num.over{color:var(--accent);}
+  .fleet-name{font-size:12.5px;color:var(--text);}
+  .fleet-count{font-family:var(--mono);font-size:16px;font-weight:600;color:var(--accent);flex:none;}
+
+  /* LEGEND */
+  .legend{display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap;background:var(--panel-2);}
+  .legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);}
+  .legend-dot{width:8px;height:8px;border-radius:50%;flex:none;}
+  .legend-item.ok .legend-dot{background:var(--good);}
+  .legend-item.fail .legend-dot{background:var(--bad);}
+  .legend-item.pend .legend-dot{background:var(--warn);}
+  .legend-note{font-size:11px;color:var(--muted);margin-left:auto;}
+
+  /* FILTER BAR */
+  .filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .filter-input-wrap{position:relative;}
+  #driver-search{
+    background:var(--panel-2);border:1px solid var(--line);color:var(--text);
+    font-family:'Inter',sans-serif;font-size:12.8px;padding:8px 12px 8px 30px;border-radius:7px;
+    width:220px;outline:none;transition:border-color .12s ease;
+  }
+  #driver-search:focus{border-color:var(--accent);}
+  .filter-input-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--muted);pointer-events:none;}
+  #vehicle-filter{
+    background:var(--panel-2);border:1px solid var(--line);color:var(--text);
+    font-family:'Inter',sans-serif;font-size:12.5px;padding:8px 10px;border-radius:7px;outline:none;
+  }
+  .btn-clear{
+    background:transparent;border:1px solid var(--line);color:var(--muted);
+    font-family:var(--mono);font-size:11px;padding:7px 10px;border-radius:7px;cursor:pointer;
+  }
+  .btn-clear:hover{color:var(--text);border-color:var(--muted);}
+
+  /* TABLE */
+  table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:11.8px;}
+  thead th{
+    text-align:left;font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.03em;
+    color:var(--muted);padding:9px 8px;border-bottom:1px solid var(--line);white-space:normal;font-weight:700;
+    overflow-wrap:break-word;
+  }
+  tbody td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:normal;overflow-wrap:break-word;word-break:break-word;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:nth-child(even){background:rgba(59,147,224,.035);}
+  tbody tr:hover{background:var(--panel-2);}
+  .route-id{font-family:var(--mono);color:var(--text);font-weight:500;font-size:11.5px;}
+  .route-code{display:block;font-family:var(--mono);font-size:9.5px;color:var(--muted);}
+  .driver{color:var(--text);}
+  .badge{
+    display:inline-block;padding:3px 7px;border-radius:5px;font-size:10px;font-family:var(--mono);
+    background:var(--panel-2);color:var(--muted);border:1px solid var(--line);white-space:normal;line-height:1.3;
+  }
+  .num-good{color:var(--good);font-family:var(--mono);}
+  .num-bad{color:var(--bad);font-family:var(--mono);}
+  .num-warn{color:var(--warn);font-family:var(--mono);}
+  .num{font-family:var(--mono);}
+  .ozh-orh-labels{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.04em;color:var(--muted);margin-bottom:2px;}
+  .ozh-orh-value{font-size:11.5px;white-space:nowrap;}
+
+  /* manifest strip = signature element */
+  .strip{width:100%;max-width:80px;height:8px;border-radius:4px;overflow:hidden;display:flex;background:var(--line);}
+  .strip div{height:100%;}
+  .strip .s-ok{background:var(--good);}
+  .strip .s-fail{background:var(--bad);}
+  .strip .s-pend{background:var(--warn);}
+  .strip-pct{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:8px;}
+  .strip-cell{display:flex;align-items:center;}
+
+  colgroup col.c-rota{width:11%;}
+  colgroup col.c-motorista{width:13%;}
+  colgroup col.c-veiculo{width:11%;}
+  colgroup col.c-base{width:6%;}
+  colgroup col.c-pacotes{width:6%;}
+  colgroup col.c-sucesso{width:6%;}
+  colgroup col.c-falha{width:6%;}
+  colgroup col.c-pendente{width:6.5%;}
+  colgroup col.c-progresso{width:9%;}
+  colgroup col.c-reclamacoes{width:8%;}
+  colgroup col.c-contato{width:8.5%;}
+  colgroup col.c-janela{width:8%;}
+
+  /* LEADERBOARD: PROMOTORES & OFENSORES */
+  .leader-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px 18px;}
+  @media (max-width:800px){ .leader-grid{grid-template-columns:1fr;} }
+  .leader-col h3{
+    font-family:'Space Grotesk',sans-serif;font-size:13px;margin:0 0 10px;font-weight:600;
+    display:flex;align-items:center;gap:7px;
+  }
+  .leader-col.promo h3{color:var(--good);}
+  .leader-col.offend h3{color:var(--bad);}
+  .leader-col h3 .dot{width:8px;height:8px;border-radius:50%;flex:none;}
+  .leader-col.promo h3 .dot{background:var(--good);}
+  .leader-col.offend h3 .dot{background:var(--bad);}
+  .leader-list{display:flex;flex-direction:column;gap:8px;}
+  .leader-item{
+    display:flex;align-items:center;gap:10px;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;
+  }
+  .leader-col.offend .leader-item{border-left:3px solid var(--bad);}
+  .leader-col.promo .leader-item{border-left:3px solid var(--good);}
+  .leader-rank{font-size:15px;width:20px;flex:none;text-align:center;}
+  .leader-name{flex:1;font-size:12.3px;color:var(--text);text-transform:capitalize;}
+  .leader-metric{font-family:var(--mono);font-size:11px;white-space:nowrap;font-weight:600;}
+
+  .empty{padding:40px;text-align:center;color:var(--muted);font-size:13px;}
+
+  footer{color:var(--muted);font-size:11px;font-family:var(--mono);text-align:center;margin-top:8px;}
+
+  @media (max-width:920px){
+    .kpis{grid-template-columns:repeat(3,1fr);}
+    header{flex-direction:column;}
+    .import-zone{align-items:flex-start;}
+  }
+  @media (max-width:560px){
+    .kpis{grid-template-columns:repeat(2,1fr);}
+  }
+  @media (min-width:921px) and (max-width:1180px){
+    .kpis{grid-template-columns:repeat(4,1fr);}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="brand-eyebrow">Monitoramento de última milha</p>
+      <h1>Painel de Rotas</h1>
+      <p class="sub">Filial <span id="branch-name">SMG2</span> · atualizado ao carregar a planilha</p>
+    </div>
+
+    <div class="import-zone">
+      <button class="btn-import" id="btn-import">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        Importar planilha
+      </button>
+      <input type="file" id="file-input" accept=".xlsx,.xls,.csv">
+      <button class="btn-undo" id="btn-undo-import" disabled="">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M3 13a9 9 0 1 0 3-7.7L3 7"></path></svg>
+        Desfazer última importação
+      </button>
+      <button class="btn-undo" id="btn-save-import" disabled="">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        Salvar última importação
+      </button>
+      <button class="btn-undo" id="btn-download-html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Baixar HTML atualizado
+      </button>
+      <span class="import-hint">.xlsx · .xls · .csv</span>
+      <span class="import-status" id="import-status"></span>
+    </div>
+  </header>
+
+  <section class="kpis" id="kpis">
+      <div class="kpi" style="--kpi-color:var(--accent)">
+        <p class="kpi-label">Rotas ativas</p>
+        <p class="kpi-value">21</p>
+        
+      </div>
+    
+      <div class="kpi" style="--kpi-color:var(--accent)">
+        <p class="kpi-label">Pacotes totais</p>
+        <p class="kpi-value">1.796</p>
+        
+      </div>
+    
+      <div class="kpi" style="--kpi-color:var(--good)">
+        <p class="kpi-label">Entregas com sucesso</p>
+        <p class="kpi-value">1.721</p>
+        
+      </div>
+    
+      <div class="kpi" style="--kpi-color:var(--bad)">
+        <p class="kpi-label">Entregas com falha</p>
+        <p class="kpi-value">73</p>
+        
+      </div>
+    
+      <div class="kpi" style="--kpi-color:var(--warn)">
+        <p class="kpi-label">Entregas pendentes</p>
+        <p class="kpi-value">2</p>
+        
+      </div>
+    
+      <div class="kpi" style="--kpi-color:var(--bad)">
+        <p class="kpi-label">Reclamações totais</p>
+        <p class="kpi-value">98</p>
+        
+      </div>
+    
+      <div class="kpi" style="--kpi-color:var(--good)">
+        <p class="kpi-label">Taxa de sucesso</p>
+        <p class="kpi-value">95.8<small>%</small></p>
+        <p class="kpi-note">META: 99,0%</p>
+      </div>
+    </section>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-head-text">
+        <h2>Frota em operação</h2>
+        <p class="panel-sub">Quantidade de rotas rodando por tipo de veículo</p>
+      </div>
+      <span class="count" id="fleet-count">7 tipos de veículo · 21 veículos no total</span>
+    </div>
+    <div class="fleet-grid" id="fleet-grid">
+      <div class="fleet-item">
+        <span class="fleet-name">Utilitários SDD</span>
+        <span class="fleet-count">7</span>
+      </div>
+    
+      <div class="fleet-item">
+        <span class="fleet-name">Vuc Vamos 2025</span>
+        <span class="fleet-count">6</span>
+      </div>
+    
+      <div class="fleet-item">
+        <span class="fleet-name">Vuc SDD</span>
+        <span class="fleet-count">3</span>
+      </div>
+    
+      <div class="fleet-item">
+        <span class="fleet-name">VUC Dedicado com Ajudante</span>
+        <span class="fleet-count">2</span>
+      </div>
+    
+      <div class="fleet-item">
+        <span class="fleet-name">Utilitário Vamos 2025</span>
+        <span class="fleet-count">1</span>
+      </div>
+    
+      <div class="fleet-item">
+        <span class="fleet-name">Utilitários</span>
+        <span class="fleet-count">1</span>
+      </div>
+    
+      <div class="fleet-item">
+        <span class="fleet-name">Van TKS 2025 H2</span>
+        <span class="fleet-count">1</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-head-text">
+        <h2>Promotores &amp; Ofensores</h2>
+        <p class="panel-sub">Top 3 motoristas com 100% de entregas realizadas e top 3 com mais falhas</p>
+      </div>
+      <span class="count" id="leader-count"></span>
+    </div>
+    <div class="leader-grid">
+      <div class="leader-col promo">
+        <h3><span class="dot"></span>Top 3 Promotores (100% de entregas)</h3>
+        <div class="leader-list" id="promoters-list"></div>
+      </div>
+      <div class="leader-col offend">
+        <h3><span class="dot"></span>Top 3 Ofensores (mais falhas)</h3>
+        <div class="leader-list" id="offenders-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-head-text">
+        <h2>Rotas</h2>
+        <p class="panel-sub">Detalhamento de pacotes, falhas e pendências por rota</p>
+      </div>
+      <div class="filter-bar">
+        <div class="filter-input-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="driver-search" list="driver-list" placeholder="Buscar motorista...">
+          <datalist id="driver-list"><option value="cristiano luiz lino"></option><option value="daniel gleison de paula"></option><option value="eduardo alves ferreira da silva junior"></option><option value="fabio pereira basilio"></option><option value="filipe matheus rezende"></option><option value="gustavo da silva belo"></option><option value="keuler tadeu do vale miranda"></option><option value="leandro custodio da rocha"></option><option value="lucas leonardo de oliveira julio"></option><option value="marcos vinicius da silva"></option><option value="marcos vinicius mendes da rocha"></option><option value="marvin eduardo franco hagla"></option><option value="matheus filipe mendes da rocha"></option><option value="michel souza da costa"></option><option value="quezia de almeida cosme"></option><option value="rodney augusto cosme da silva"></option><option value="rogerio santos de oliveira"></option><option value="sergio david pussente ferreira"></option><option value="wellington de oliveira magalhaes"></option><option value="weslei thomaz bordao de souza"></option><option value="weverton martins monteiro duque"></option></datalist>
+        </div>
+        <select id="vehicle-filter"><option value="">Todos os veículos</option><option value="Utilitários SDD">Utilitários SDD (7)</option><option value="Vuc Vamos 2025">Vuc Vamos 2025 (6)</option><option value="Vuc SDD">Vuc SDD (3)</option><option value="VUC Dedicado com Ajudante">VUC Dedicado com Ajudante (2)</option><option value="Utilitário Vamos 2025">Utilitário Vamos 2025 (1)</option><option value="Utilitários">Utilitários (1)</option><option value="Van TKS 2025 H2">Van TKS 2025 H2 (1)</option></select>
+        <button class="btn-clear" id="btn-clear-filters">Limpar filtros</button>
+      </div>
+      <span class="count" id="route-count">21 rotas</span>
+    </div>
+    <div class="legend">
+      <span class="legend-item ok"><span class="legend-dot"></span>Sucesso</span>
+      <span class="legend-item fail"><span class="legend-dot"></span>Falha</span>
+      <span class="legend-item pend"><span class="legend-dot"></span>Pendente</span>
+      <span class="legend-note">a barra "Progresso" mostra a proporção de cada status dentro dos pacotes da rota</span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table id="route-table">
+        <colgroup>
+          <col class="c-rota"><col class="c-motorista"><col class="c-veiculo"><col class="c-base">
+          <col class="c-pacotes"><col class="c-sucesso"><col class="c-falha"><col class="c-pendente">
+          <col class="c-progresso"><col class="c-reclamacoes"><col class="c-contato"><col class="c-janela">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Rota</th>
+            <th>Motorista</th>
+            <th>Veículo</th>
+            <th>Base</th>
+            <th>Pacotes</th>
+            <th>Sucesso</th>
+            <th>Falha</th>
+            <th>Pendente</th>
+            <th>Progresso</th>
+            <th>Reclamações</th>
+            <th>Contact Race PNR</th>
+            <th>OZH - ORH</th>
+          </tr>
+        </thead>
+        <tbody id="route-tbody">
+      <tr>
+        <td>
+          <span class="route-id">Rota #409330027</span>
+          <span class="route-code"> · SRV4F62</span>
+        </td>
+        <td class="driver">weverton martins monteiro duque</td>
+        <td><span class="badge">VUC Dedicado com Ajudante</span></td>
+        <td><span class="badge">SMG2 · AM1</span></td>
+        <td class="num">28</td>
+        <td class="num-good">0</td>
+        <td>
+          <span class="num-bad">28</span>
+        </td>
+        <td class="num-warn">0</td>
+        <td>
+          <div class="strip" title="0 sucesso · 28 falha · 0 pendente">
+            <div class="s-ok" style="width:0%"></div>
+            <div class="s-fail" style="width:100%"></div>
+            <div class="s-pend" style="width:0%"></div>
+          </div>
+        </td>
+        <td class="num-warn">2</td>
+        <td class="num">0,0%</td>
+        <td class="num">08:58 - 09:21</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="route-id">Rota #409330118</span>
+          <span class="route-code"> · SRV4F55</span>
+        </td>
+        <td class="driver">weslei thomaz bordao de souza</td>
+        <td><span class="badge">VUC Dedicado com Ajudante</span></td>
+        <td><span class="badge">SMG2 · AM1</span></td>
+        <td class="num">53</td>
+        <td class="num-good">37</td>
+        <td>
+          <span class="num-bad">14</span>
+        </td>
+        <td class="num-warn">2</td>
+        <td>
+          <div class="strip" title="37 sucesso · 14 falha · 2 pendente">
+            <div class="s-ok" style="width:69.81132075471697%"></div>
+            <div class="s-fail" style="width:26.41509433962264%"></div>
+            <div class="s-pend" style="width:3.7735849056603774%"></div>
+          </div>
+        </td>
+        <td class="num-warn">1</td>
+        <td class="num">0,0%</td>
+        <td class="num">08:09 - 09:15</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="route-id">VB3_AM1</span>
+          <span class="route-code">#409359462 · SDD-HFT3176</span>
+        </td>
+        <td class="driver">marcos vinicius mendes da rocha</td>
+        <td><span class="badge">Utilitários SDD</span></td>
+        <td><span class="badge">SMG2 · AM1</span></td>
+        <td class="num">124</td>
+        <td class="num-good">124</td>
+        <td>
+          <span class="num-bad">0</span>
+        </td>
+        <td class="num-warn">0</td>
+        <td>
+          <div class="strip" title="124 sucesso · 0 falha · 0 pendente">
+            <div class="s-ok" style="width:100%"></div>
+            <div class="s-fail" style="width:0%"></div>
+            <div class="s-pend" style="width:0%"></div>
+          </div>
+        </td>
+        <td class="num-warn">2</td>
+        <td class="num">0,1%</td>
+        <td class="num">04:19 - 06:44</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="route-id">VB5_AM1</span>
+          <span class="route-code">#409360344 · TXE9H79</span>
+        </td>
+        <td class="driver">filipe matheus rezende</td>
+        <td><span class="badge">Utilitário Vamos 2025</span></td>
+        <td><span class="badge">SMG2 · AM1</span></td>
+        <td class="num">110</td>
+        <td class="num-good">110</td>
+        <td>
+          <span class="num-bad">0</span>
+        </td>
+        <td class="num-warn">0</td>
+        <td>
+          <div class="strip" title="110 sucesso · 0 falha · 0 pendente">
+            <div class="s-ok" style="width:100%"></div>
+            <div class="s-fail" style="width:0%"></div>
+            <div class="s-pend" style="width:0%"></div>
+          </div>
+        </td>
+        <td class="num-warn">10</td>
+        <td class="num">0,1%</td>
+        <td class="num">02:34 - 05:21</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="route-id">VB1_AM1</span>
+          <span class="route-code">#409365706 · SDD-TYL3I70</span>
+        </td>
+        <td class="driver">rodney augusto cosme da silva</td>
+        <td><span class="badge">Utilitários SDD</span></td>
+        <td><span class="badge">SMG2 · AM1</span></td>
+        <td class="num">130</td>
+        <td class="num-good">130</td>
+        <td>
+          <span class="num-bad">0</span>
+        </td>
+        <td class="num-warn">0</td>
+        <td>
+          <div class="strip" title="130 sucesso · 0 falha · 0 pendente">
+            <div class="s-ok" style="width:100%"></div>
+            <div class="s-fail" style="width:0%"></div>
+            <div class="s-pend" style="width:0%"></div>
+          </div>
+        </td>
+        <td class="num-warn">9</td>
+        <td class="num">0,1%</td>
+        <td class="num">04:45 - 07:26</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="route-id">V9_AM1</span>
+          <span class="route-code">#409366413 · SDD-TDY1B88</span>
+        </td>
+        <td class="driver">quezia de almeida cosme</td>
+        <td><span class="badge">Utilitários SDD</span></td>
+        <td><span class="badge">SMG2 · AM1</span></td>
+        <td class="num">113</td>
+        <td class="num-good">113</td>
+        <td>
+          <span class="num-bad">0</span>
+        </td>
+        <td class="num-warn">0</td>
+        <td>
+          <div class="strip" title="113 sucesso · 0 falha · 0 pendente">
+            <div class="s-ok" style="width:100%"></div>
+            <div class="s-fail" style="width:0%"></div>
+            <div class="s-pend" style="width:0%"></div>
+          </div>
+        </td>
+        <td class="num">0</td>
+        <td class="num">0%</td>
+        <td class="num">05:07 - 06:52</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="route-id">VD2_AM1</span>
+          <span class="route-code">#409366987 · SDD-TEP2E30</span>
+        </td>
+        <td class="driver">gustavo da silva belo</td>
+        <td><span class="badge">Utilitários SDD</span></td>
+        <td><span class="badge">SMG2 · AM1</span></td>
+        <td class="num">126</td>
+        <td class="num-good">126</td>
+        <td>
+          <span class="num-bad">0</span>
+        </td>
+        <td class="num-warn">0</td>
+        <td>
+          <div class="strip" title="126 sucesso · 0 falha · 0 pendente">
+            <div class="s-ok" style="width:100%"></div>
+            <div class="s-fail" style="width:0%"></div>
+            <div class="s-pend" style="width:0%"></div>
+          </div>
+        </td>
+        <td class="num-warn">10</td>
+        <td class="num">0,1%</td>
+        <td class="num">05:45 - 07:51</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="route-id">V11_AM1</span>
+          <span class="route-code">#409368464 · SDD-RTB0I97</span>
+        </td>
+        <td class="driver">marvin eduardo franco hagla</td>
+        <td><span class="badge">Utilitários SDD</span></td>
+        <td><span class="badge">SMG2 · AM1</span></td>
+        <td class="num">106</td>
+        <td class="num-good">106</td>
+        <td>
+          <span class="num-bad">0</span>
+        </td>
+        <td class="num-warn">0</td>
+        <td>
+          <div class="strip" title="106 sucesso · 0 falha · 0 pendente">
+            <div class="s-ok" style="width:100%"></div>
+            <div class="s-fail" style="width:0%"></div>
+            <div class="s-pend" style="width:0%"></div>
+          </div>
+        </td>
+        <td class="num-warn">2</td>
+        <td class="num">0,0%</td>
+        <td class="num">04:40 - 07:04</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="route-id">VT3_AM1</span>
+          <span class="route-code">#409369605 · SDD-TXQ2C93</span>
+        </td>
+        <td class="driver">rogerio santos de oliveira</td>
+        <td><span class="badge">Utilitários SDD</span></td>
+        <td><span class="badge">SMG2 · AM1</span></td>
+        <td class="num">137</td>
+        <td class="num-good">137</td>
+        <td>
+          <span class="num-bad">0</span>
+        </td>
+        <td class="num-warn">0</td>
+        <td>
+          <div class="strip" title="137 sucesso · 0 falha · 0 pendente">
+            <div class="s-ok" style="width:100%"></div>
+            <div class="s-fail" style="width:0%"></div>
+            <div class="s-pend" style="width:0%"></div>
+          </div>
+        </td>
+        <td class="num-warn">3</td>
+        <td class="num">0,0%</td>
+        <td class="num">06:14 - 09:39</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="route-id">VA14_AM1</span>
+          <span class="route-code">#409373420 · SDD-TTV0D86</span>
+        </td>
+        <td class="driver">leandro custodio da rocha</td>
+        <td><span class="badge">Vuc SDD</span></td>
+        <td><span class="badge">SMG2 · AM1</span></td>
+        <td class="num">65</td>
+        <td class="num-good">65</td>
+        <td>
+          <span class="num-bad">0</span>
+        </td>
+        <td class="num-warn">0</td>
+        <td>
+          <div class="strip" title="65 sucesso · 0 falha · 0 pendente">
+            <div class="s-ok" style="width:100%"></div>
+            <div class="s-fail" style="width:0%"></div>
+            <div class="s-pend" style="width:0%"></div>
+          </div>
+        </td>
+        <td class="num-warn">6</td>
+        <td class="num">0,1%</td>
+        <td class="num">05:52 - 07:19</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="route-id">VA7_AM1</span>
+          <span class="route-code">#409404416 · TXS6E11</span>
+        </td>
+        <td class="driver">daniel gleison de paula</td>
+        <td><span class="badge">Vuc Vamos 2025</span></td>
+        <td><span class="badge">SMG2 · AM1</span></td>
+        <td class="num">126</td>
+        <td class="num-good">125</td>
+        <td>
+          <span class="num-bad">1</span>
+        </td>
+        <td class="num-warn">0</td>
+        <td>
+          <div class="strip" title="125 sucesso · 1 falha · 0 pendente">
+            <div class="s-ok" style="width:99.20634920634922%"></div>
+            <div class="s-fail" style="width:0.7936507936507936%"></div>
+            <div class="s-pend" style="width:0%"></div>
+          </div>
+        </td>
+        <td class="num">0</td>
+        <td class="num">0%</td>
+        <td class="num">09:37 - 11:04</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="route-id">VX7_AM1</span>
+          <span class="route-code">#409425619 · TXP9H05</span>
+        </td>
+        <td class="driver">marcos vinicius da silva</td>
+        <td><span class="badge">Vuc Vamos 2025</span></td>
+        <td><span class="badge">SMG2 · AM1</span></td>
+        <td class="num">94</td>
+        <td class="num-good">75</td>
+        <td>
+          <span class="num-bad">19</span>
+        </td>
+        <td class="num-warn">0</td>
+        <td>
+          <div class="strip" title="75 sucesso · 19 falha · 0 pendente">
+            <div class="s-ok" style="width:79.7872340425532%"></div>
+            <div class="s-fail" style="width:20.212765957446805%"></div>
+            <div class="s-pend" style="width:0%"></div>
+          </div>
+        </td>
+        <td class="num-warn">10</td>
+        <td class="num">0,1%</td>
+        <td class="num">07:44 - 09:39</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="route-id">VX10_AM1</span>
+          <span class="route-code">#409429595 · UAW8I41</span>
+        </td>
+        <td class="driver">eduardo alves ferreira da silva junior</td>
+        <td><span class="badge">Van TKS 2025 H2</span></td>
+        <td><span class="badge">SMG2 · AM1</span></td>
+        <td class="num">53</td>
+        <td class="num-good">53</td>
+        <td>
+          <span class="num-bad">0</span>
+        </td>
+        <td class="num-warn">0</td>
+        <td>
+          <div class="strip" title="53 sucesso · 0 falha · 0 pendente">
+            <div class="s-ok" style="width:100%"></div>
+            <div class="s-fail" style="width:0%"></div>
+            <div class="s-pend" style="width:0%"></div>
+          </div>
+        </td>
+        <td class="num-warn">11</td>
+        <td class="num">0,2%</td>
+        <td class="num">05:17 - 07:35</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="route-id">VA1_AM1</span>
+          <span class="route-code">#409432101 · TXP9G86</span>
+        </td>
+        <td class="driver">cristiano luiz lino</td>
+        <td><span class="badge">Vuc Vamos 2025</span></td>
+        <td><span class="badge">SMG2 · AM1</span></td>
+        <td class="num">62</td>
+        <td class="num-good">61</td>
+        <td>
+          <span class="num-bad">1</span>
+        </td>
+        <td class="num-warn">0</td>
+        <td>
+          <div class="strip" title="61 sucesso · 1 falha · 0 pendente">
+            <div class="s-ok" style="width:98.38709677419355%"></div>
+            <div class="s-fail" style="width:1.6129032258064515%"></div>
+            <div class="s-pend" style="width:0%"></div>
+          </div>
+        </td>
+        <td class="num">0</td>
+        <td class="num">0%</td>
+        <td class="num">08:58 - 11:04</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="route-id">VF10_AM1</span>
+          <span class="route-code">#409434341 · SDD-LTK4D12</span>
+        </td>
+        <td class="driver">keuler tadeu do vale miranda</td>
+        <td><span class="badge">Utilitários SDD</span></td>
+        <td><span class="badge">SMG2 · AM1</span></td>
+        <td class="num">83</td>
+        <td class="num-good">83</td>
+        <td>
+          <span class="num-bad">0</span>
+        </td>
+        <td class="num-warn">0</td>
+        <td>
+          <div class="strip" title="83 sucesso · 0 falha · 0 pendente">
+            <div class="s-ok" style="width:100%"></div>
+            <div class="s-fail" style="width:0%"></div>
+            <div class="s-pend" style="width:0%"></div>
+          </div>
+        </td>
+        <td class="num-warn">1</td>
+        <td class="num">0,0%</td>
+        <td class="num">02:43 - 03:53</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="route-id">VZ2_AM1</span>
+          <span class="route-code">#409437470 · TXS6E19</span>
+        </td>
+        <td class="driver">lucas leonardo de oliveira julio</td>
+        <td><span class="badge">Vuc Vamos 2025</span></td>
+        <td><span class="badge">SMG2 · AM1</span></td>
+        <td class="num">101</td>
+        <td class="num-good">101</td>
+        <td>
+          <span class="num-bad">0</span>
+        </td>
+        <td class="num-warn">0</td>
+        <td>
+          <div class="strip" title="101 sucesso · 0 falha · 0 pendente">
+            <div class="s-ok" style="width:100%"></div>
+            <div class="s-fail" style="width:0%"></div>
+            <div class="s-pend" style="width:0%"></div>
+          </div>
+        </td>
+        <td class="num-warn">3</td>
+        <td class="num">0,0%</td>
+        <td class="num">03:35 - 06:28</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="route-id">VI6_AM1</span>
+          <span class="route-code">#409443007 · SDD-OPQ3E61</span>
+        </td>
+        <td class="driver">matheus filipe mendes da rocha</td>
+        <td><span class="badge">Vuc SDD</span></td>
+        <td><span class="badge">SMG2 · AM1</span></td>
+        <td class="num">5</td>
+        <td class="num-good">5</td>
+        <td>
+          <span class="num-bad">0</span>
+        </td>
+        <td class="num-warn">0</td>
+        <td>
+          <div class="strip" title="5 sucesso · 0 falha · 0 pendente">
+            <div class="s-ok" style="width:100%"></div>
+            <div class="s-fail" style="width:0%"></div>
+            <div class="s-pend" style="width:0%"></div>
+          </div>
+        </td>
+        <td class="num-warn">2</td>
+        <td class="num">0,1%</td>
+        <td class="num">00:26 - 01:57</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="route-id">VI4_AM1</span>
+          <span class="route-code">#409448873 · TXS8A82</span>
+        </td>
+        <td class="driver">fabio pereira basilio</td>
+        <td><span class="badge">Vuc Vamos 2025</span></td>
+        <td><span class="badge">SMG2 · AM1</span></td>
+        <td class="num">98</td>
+        <td class="num-good">97</td>
+        <td>
+          <span class="num-bad">1</span>
+        </td>
+        <td class="num-warn">0</td>
+        <td>
+          <div class="strip" title="97 sucesso · 1 falha · 0 pendente">
+            <div class="s-ok" style="width:98.9795918367347%"></div>
+            <div class="s-fail" style="width:1.0204081632653061%"></div>
+            <div class="s-pend" style="width:0%"></div>
+          </div>
+        </td>
+        <td class="num-warn">2</td>
+        <td class="num">0,1%</td>
+        <td class="num">08:30 - 10:35</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="route-id">VA8_AM1</span>
+          <span class="route-code">#409454536 · SDD-TUA0E12</span>
+        </td>
+        <td class="driver">michel souza da costa</td>
+        <td><span class="badge">Vuc SDD</span></td>
+        <td><span class="badge">SMG2 · AM1</span></td>
+        <td class="num">66</td>
+        <td class="num-good">65</td>
+        <td>
+          <span class="num-bad">1</span>
+        </td>
+        <td class="num-warn">0</td>
+        <td>
+          <div class="strip" title="65 sucesso · 1 falha · 0 pendente">
+            <div class="s-ok" style="width:98.48484848484848%"></div>
+            <div class="s-fail" style="width:1.5151515151515151%"></div>
+            <div class="s-pend" style="width:0%"></div>
+          </div>
+        </td>
+        <td class="num-warn">4</td>
+        <td class="num">0,1%</td>
+        <td class="num">06:02 - 07:22</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="route-id">VG1_AM1</span>
+          <span class="route-code">#409461711 · TXS8A84</span>
+        </td>
+        <td class="driver">wellington de oliveira magalhaes</td>
+        <td><span class="badge">Vuc Vamos 2025</span></td>
+        <td><span class="badge">SMG2 · AM1</span></td>
+        <td class="num">71</td>
+        <td class="num-good">69</td>
+        <td>
+          <span class="num-bad">2</span>
+        </td>
+        <td class="num-warn">0</td>
+        <td>
+          <div class="strip" title="69 sucesso · 2 falha · 0 pendente">
+            <div class="s-ok" style="width:97.1830985915493%"></div>
+            <div class="s-fail" style="width:2.8169014084507045%"></div>
+            <div class="s-pend" style="width:0%"></div>
+          </div>
+        </td>
+        <td class="num-warn">3</td>
+        <td class="num">0,2%</td>
+        <td class="num">07:25 - 09:51</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="route-id">B6_SD</span>
+          <span class="route-code">#409607619 · TXI6E38</span>
+        </td>
+        <td class="driver">sergio david pussente ferreira</td>
+        <td><span class="badge">Utilitários</span></td>
+        <td><span class="badge">SMG2 · SD</span></td>
+        <td class="num">45</td>
+        <td class="num-good">39</td>
+        <td>
+          <span class="num-bad">6</span>
+        </td>
+        <td class="num-warn">0</td>
+        <td>
+          <div class="strip" title="39 sucesso · 6 falha · 0 pendente">
+            <div class="s-ok" style="width:86.66666666666667%"></div>
+            <div class="s-fail" style="width:13.333333333333334%"></div>
+            <div class="s-pend" style="width:0%"></div>
+          </div>
+        </td>
+        <td class="num-warn">17</td>
+        <td class="num">0,3%</td>
+        <td class="num">03:47 - 05:20</td>
+      </tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>painel gerado a partir da planilha original · use "Importar planilha" para substituir os dados</footer>
+</div>
+
+<script type="text/plain" id="seed-csv">Rota #409330027;SRV4F62;VUC Dedicado com Ajudante;SMG2 · AM1;weverton martins monteiro duque;Contact rate: 0,0%;Totales reclamações: 2;100;0 pendentes, 28 com falhas, 0 bem-sucedidos;28 unidades;0 comerciais;0 residenciais;28 unidades;0 unidades;08:58 h;09:21 h
+Rota #409330118;SRV4F55;VUC Dedicado com Ajudante;SMG2 · AM1;weslei thomaz bordao de souza;Contact rate: 0,0%;Totales reclamações: 1;96;2 pendentes, 14 com falhas, 37 bem-sucedidos;53 unidades;0 comerciais;0 residenciais;14 unidades;37 unidades;08:09 h;09:15 h
+VB3_AM1 · #409359462;SDD-HFT3176;Utilitários SDD;SMG2 · AM1;marcos vinicius mendes da rocha;Contact rate: 0,1%;Totales reclamações: 2;100;0 pendentes, 0 com falhas, 124 bem-sucedidos;124 unidades;0 comerciais;0 residenciais;0 unidades;124 unidades;04:19 h;06:44 h
+VB5_AM1 · #409360344;TXE9H79;Utilitário Vamos 2025;SMG2 · AM1;filipe matheus rezende;Contact rate: 0,1%;Totales reclamações: 10;100;0 pendentes, 0 com falhas, 110 bem-sucedidos;110 unidades;0 comerciais;0 residenciais;0 unidades;110 unidades;02:34 h;05:21 h
+VB1_AM1 · #409365706;SDD-TYL3I70;Utilitários SDD;SMG2 · AM1;rodney augusto cosme da silva;Contact rate: 0,1%;Totales reclamações: 9;100;0 pendentes, 0 com falhas, 130 bem-sucedidos;130 unidades;0 comerciais;0 residenciais;0 unidades;130 unidades;04:45 h;07:26 h
+V9_AM1 · #409366413;SDD-TDY1B88;Utilitários SDD;SMG2 · AM1;quezia de almeida cosme;Contact rate: 0%;Totales reclamações: 0;100;0 pendentes, 0 com falhas, 113 bem-sucedidos;113 unidades;0 comerciais;0 residenciais;0 unidades;113 unidades;05:07 h;06:52 h
+VD2_AM1 · #409366987;SDD-TEP2E30;Utilitários SDD;SMG2 · AM1;gustavo da silva belo;Contact rate: 0,1%;Totales reclamações: 10;100;0 pendentes, 0 com falhas, 126 bem-sucedidos;126 unidades;0 comerciais;0 residenciais;0 unidades;126 unidades;05:45 h;07:51 h
+V11_AM1 · #409368464;SDD-RTB0I97;Utilitários SDD;SMG2 · AM1;marvin eduardo franco hagla;Contact rate: 0,0%;Totales reclamações: 2;100;0 pendentes, 0 com falhas, 106 bem-sucedidos;106 unidades;0 comerciais;0 residenciais;0 unidades;106 unidades;04:40 h;07:04 h
+VT3_AM1 · #409369605;SDD-TXQ2C93;Utilitários SDD;SMG2 · AM1;rogerio santos de oliveira;Contact rate: 0,0%;Totales reclamações: 3;100;0 pendentes, 0 com falhas, 137 bem-sucedidos;137 unidades;0 comerciais;0 residenciais;0 unidades;137 unidades;06:14 h;09:39 h
+VA14_AM1 · #409373420;SDD-TTV0D86;Vuc SDD;SMG2 · AM1;leandro custodio da rocha;Contact rate: 0,1%;Totales reclamações: 6;100;0 pendentes, 0 com falhas, 65 bem-sucedidos;65 unidades;0 comerciais;0 residenciais;0 unidades;65 unidades;05:52 h;07:19 h
+VA7_AM1 · #409404416;TXS6E11;Vuc Vamos 2025;SMG2 · AM1;daniel gleison de paula;Contact rate: 0%;Totales reclamações: 0;100;0 pendentes, 1 com falha, 125 bem-sucedidos;124 de entrega · 2 de coleta;123 de entrega · 2 de coleta;;0 de entrega · 0 de coleta;1 de entrega · 0 de coleta;09:37 h;11:04 h
+VX7_AM1 · #409425619;TXP9H05;Vuc Vamos 2025;SMG2 · AM1;marcos vinicius da silva;Contact rate: 0,1%;Totales reclamações: 10;100;0 pendentes, 19 com falhas, 75 bem-sucedidos;94 unidades;2 comerciais;17 residenciais;19 unidades;75 unidades;07:44 h;09:39 h
+VX10_AM1 · #409429595;UAW8I41;Van TKS 2025 H2;SMG2 · AM1;eduardo alves ferreira da silva junior;Contact rate: 0,2%;Totales reclamações: 11;100;0 pendentes, 0 com falhas, 53 bem-sucedidos;53 unidades;0 comerciais;0 residenciais;0 unidades;53 unidades;05:17 h;07:35 h
+VA1_AM1 · #409432101;TXP9G86;Vuc Vamos 2025;SMG2 · AM1;cristiano luiz lino;Contact rate: 0%;Totales reclamações: 0;100;0 pendentes, 1 com falha, 61 bem-sucedidos;61 de entrega · 1 de coleta;60 de entrega · 1 de coleta;;1 de entrega · 0 de coleta;1 de entrega · 0 de coleta;08:58 h;11:04 h
+VF10_AM1 · #409434341;SDD-LTK4D12;Utilitários SDD;SMG2 · AM1;keuler tadeu do vale miranda;Contact rate: 0,0%;Totales reclamações: 1;100;0 pendentes, 0 com falhas, 83 bem-sucedidos;83 unidades;0 comerciais;0 residenciais;0 unidades;83 unidades;02:43 h;03:53 h
+VZ2_AM1 · #409437470;TXS6E19;Vuc Vamos 2025;SMG2 · AM1;lucas leonardo de oliveira julio;Contact rate: 0,0%;Totales reclamações: 3;100;0 pendentes, 0 com falhas, 101 bem-sucedidos;98 unidades;0 comerciais;0 residenciais;0 unidades;101 unidades;03:35 h;06:28 h
+VI6_AM1 · #409443007;SDD-OPQ3E61;Vuc SDD;SMG2 · AM1;matheus filipe mendes da rocha;Contact rate: 0,1%;Totales reclamações: 2;100;0 pendentes, 0 com falhas, 5 bem-sucedidos;1 unidades;0 comerciais;0 residenciais;0 unidades;5 unidades;00:26 h;01:57 h
+VI4_AM1 · #409448873;TXS8A82;Vuc Vamos 2025;SMG2 · AM1;fabio pereira basilio;Contact rate: 0,1%;Totales reclamações: 2;100;0 pendentes, 1 com falha, 97 bem-sucedidos;77 unidades;1 comerciais;0 residenciais;1 unidades;97 unidades;08:30 h;10:35 h
+VA8_AM1 · #409454536;SDD-TUA0E12;Vuc SDD;SMG2 · AM1;michel souza da costa;Contact rate: 0,1%;Totales reclamações: 4;100;0 pendentes, 1 com falha, 65 bem-sucedidos;66 unidades;0 comerciais;1 residenciais;1 unidades;65 unidades;06:02 h;07:22 h
+VG1_AM1 · #409461711;TXS8A84;Vuc Vamos 2025;SMG2 · AM1;wellington de oliveira magalhaes;Contact rate: 0,2%;Totales reclamações: 3;100;0 pendentes, 2 com falhas, 69 bem-sucedidos;51 unidades;1 comerciais;1 residenciais;2 unidades;69 unidades;07:25 h;09:51 h
+B6_SD · #409607619;TXI6E38;Utilitários;SMG2 · SD;sergio david pussente ferreira;Contact rate: 0,3%;Totales reclamações: 17;100;0 pendentes, 6 com falhas, 39 bem-sucedidos;45 unidades;2 comerciais;4 residenciais;6 unidades;39 unidades;03:47 h;05:20 h</script>
+
+<script>
+(function(){
+  const $ = (s)=>document.querySelector(s);
+  let allRoutes = [];
+
+  function parseRow(cols){
+    const raw = (cols[0]||'').trim();
+    const parts = raw.split('·').map(s=>s.trim());
+    const routeLabel = parts[0] || raw;
+    const routeCode = parts[1] || '';
+    const plate = (cols[1]||'').trim();
+    const vehicle = (cols[2]||'').trim();
+    const branch = (cols[3]||'').trim();
+    const driver = (cols[4]||'').trim();
+
+    const contactMatch = (cols[5]||'').match(/([\d.,]+)\s*%/);
+    const contactRate = contactMatch ? contactMatch[1] : '0';
+
+    const complaintsMatch = (cols[6]||'').match(/(\d+)/);
+    const complaints = complaintsMatch ? parseInt(complaintsMatch[1],10) : 0;
+
+    const statusNums = (cols[8]||'').match(/\d+/g) || ['0','0','0'];
+    const pending = parseInt(statusNums[0]||0,10);
+    const failed = parseInt(statusNums[1]||0,10);
+    const success = parseInt(statusNums[2]||0,10);
+    const total = pending+failed+success;
+
+    const extractTime = (s)=>{
+      if(!s) return '';
+      const m = String(s).match(/(\d{1,2}):(\d{2})(?::\d{2})?/);
+      return m ? m[1].padStart(2,'0')+':'+m[2] : String(s).trim();
+    };
+    const start = extractTime((cols[14]||'').trim());
+    const end = extractTime((cols[15]||'').trim());
+
+    return {routeLabel, routeCode, plate, vehicle, branch, driver, contactRate, complaints, pending, failed, success, total, start, end};
+  }
+
+  function parseCsvText(text){
+    return text.split(/\r?\n/).filter(l=>l.trim().length>0).map(line=>line.split(';'));
+  }
+
+  function fmtNum(n){ return new Intl.NumberFormat('pt-BR').format(n); }
+
+  function renderSummary(routes){
+    const totalRoutes = routes.length;
+    const totalSuccess = routes.reduce((a,r)=>a+r.success,0);
+    const totalFailed = routes.reduce((a,r)=>a+r.failed,0);
+    const totalPending = routes.reduce((a,r)=>a+r.pending,0);
+    const totalComplaints = routes.reduce((a,r)=>a+r.complaints,0);
+    const totalUnits = totalSuccess+totalFailed+totalPending;
+    const successRate = totalUnits ? (totalSuccess/totalUnits*100) : 0;
+
+    const branchSet = [...new Set(routes.map(r=>r.branch.split('·')[0].trim()).filter(Boolean))];
+    $('#branch-name').textContent = branchSet.join(', ') || '—';
+
+    const kpis = [
+      {label:'Rotas ativas', value: fmtNum(totalRoutes), color:'var(--accent)'},
+      {label:'Pacotes totais', value: fmtNum(totalUnits), color:'var(--accent)'},
+      {label:'Entregas com sucesso', value: fmtNum(totalSuccess), color:'var(--good)'},
+      {label:'Entregas com falha', value: fmtNum(totalFailed), color:'var(--bad)'},
+      {label:'Entregas pendentes', value: fmtNum(totalPending), color:'var(--warn)'},
+      {label:'Reclamações totais', value: fmtNum(totalComplaints), color:'var(--bad)'},
+      {label:'Taxa de sucesso', value: successRate.toFixed(1)+'<small>%</small>', color:'var(--good)', note:'META: 99,0%'},
+    ];
+    $('#kpis').innerHTML = kpis.map(k=>`
+      <div class="kpi" style="--kpi-color:${k.color}">
+        <p class="kpi-label">${k.label}</p>
+        <p class="kpi-value">${k.value}</p>
+        ${k.note ? `<p class="kpi-note">${k.note}</p>` : ''}
+      </div>
+    `).join('');
+  }
+
+  // metas de utilização de frota (nº de veículos esperados por tipo)
+  const FLEET_TARGETS = {
+    'utilitarios sdd': 13,
+    'vuc sdd': 5
+  };
+  function normalizeVehicleName(name){
+    return (name||'')
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,''); // remove acentos
+  }
+
+  function renderFleet(routes){
+    const counts = new Map();
+    routes.forEach(r=>{
+      const key = r.vehicle || 'Não informado';
+      counts.set(key, (counts.get(key)||0)+1);
+    });
+    const entries = [...counts.entries()].sort((a,b)=> b[1]-a[1] || a[0].localeCompare(b[0]));
+    $('#fleet-count').textContent = entries.length + ' tipo' + (entries.length===1?'':'s') + ' de veículo · ' + routes.length + ' veículos no total';
+    $('#fleet-grid').innerHTML = entries.map(([name,count])=>{
+      const target = FLEET_TARGETS[normalizeVehicleName(name)];
+      if(!target){
+        return `
+      <div class="fleet-item">
+        <span class="fleet-name">${name}</span>
+        <span class="fleet-count">${count}</span>
+      </div>`;
+      }
+      const pct = Math.round((count/target)*100);
+      let barClass = 'good';
+      if(count > target) barClass = 'over';
+      else if(count === target) barClass = 'good';
+      else if(pct >= 70) barClass = 'warn';
+      else barClass = 'bad';
+      return `
+      <div class="fleet-item has-target">
+        <span class="fleet-name">${name}</span>
+        <span class="fleet-target-count"><b class="fleet-num ${barClass}">${count}</b>/<b>${target}</b></span>
+      </div>`;
+    }).join('') || '<div class="empty">Sem dados de frota.</div>';
+
+    // keep the vehicle filter dropdown in sync
+    const select = $('#vehicle-filter');
+    const current = select.value;
+    select.innerHTML = '<option value="">Todos os veículos</option>' +
+      entries.map(([name,count])=>`<option value="${name}">${name} (${count})</option>`).join('');
+    if(entries.some(([name])=>name===current)) select.value = current;
+  }
+
+  function populateDriverList(routes){
+    const names = [...new Set(routes.map(r=>r.driver).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+    $('#driver-list').innerHTML = names.map(n=>`<option value="${n}"></option>`).join('');
+  }
+
+  function renderTable(routes){
+    $('#route-count').textContent = routes.length + ' rota' + (routes.length===1?'':'s');
+    const tbody = $('#route-tbody');
+    if(!routes.length){
+      tbody.innerHTML = `<tr><td colspan="12" class="empty">Nenhuma rota encontrada para esse filtro.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = routes.map(r=>{
+      const pctOk = r.total ? (r.success/r.total*100) : 0;
+      const pctFail = r.total ? (r.failed/r.total*100) : 0;
+      const pctPend = r.total ? (r.pending/r.total*100) : 0;
+      return `
+      <tr>
+        <td>
+          <span class="route-id">${r.routeLabel}</span>
+          <span class="route-code">${r.routeCode}${r.plate ? ' · '+r.plate : ''}</span>
+        </td>
+        <td class="driver">${r.driver}</td>
+        <td><span class="badge">${r.vehicle||'—'}</span></td>
+        <td><span class="badge">${r.branch||'—'}</span></td>
+        <td class="num">${fmtNum(r.total)}</td>
+        <td class="num-good">${fmtNum(r.success)}</td>
+        <td>
+          <span class="num-bad">${fmtNum(r.failed)}</span>
+        </td>
+        <td class="num-warn">${fmtNum(r.pending)}</td>
+        <td>
+          <div class="strip" title="${r.success} sucesso · ${r.failed} falha · ${r.pending} pendente">
+            <div class="s-ok" style="width:${pctOk}%"></div>
+            <div class="s-fail" style="width:${pctFail}%"></div>
+            <div class="s-pend" style="width:${pctPend}%"></div>
+          </div>
+        </td>
+        <td class="${r.complaints>0?'num-warn':'num'}">${fmtNum(r.complaints)}</td>
+        <td class="num">${r.contactRate}%</td>
+        <td class="num">${r.start} - ${r.end}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderLeaders(routes){
+    // agrupa por motorista, somando todas as rotas de cada um
+    const map = new Map();
+    routes.forEach(r=>{
+      if(!r.driver) return;
+      if(!map.has(r.driver)){
+        map.set(r.driver, {driver:r.driver, total:0, success:0, failed:0, pending:0, routes:0});
+      }
+      const d = map.get(r.driver);
+      d.total += r.total;
+      d.success += r.success;
+      d.failed += r.failed;
+      d.pending += r.pending;
+      d.routes += 1;
+    });
+    const drivers = [...map.values()].map(d=>({...d, rate: d.total ? (d.success/d.total*100) : 0}));
+
+    // promotores: 100% de sucesso (sem nenhuma falha/pendência), desempate por volume de pacotes
+    const promoters = drivers
+      .filter(d=>d.total>0 && d.failed===0 && d.pending===0)
+      .sort((a,b)=> b.total-a.total)
+      .slice(0,3);
+
+    // ofensores: maior número absoluto de falhas, desempate por menor taxa de sucesso
+    const offenders = drivers
+      .filter(d=>d.failed>0)
+      .sort((a,b)=> b.failed-a.failed || a.rate-b.rate)
+      .slice(0,3);
+
+    const medal = ['🥇','🥈','🥉'];
+
+    $('#leader-count').textContent = drivers.length + ' motorista' + (drivers.length===1?'':'es') + ' no total';
+
+    $('#promoters-list').innerHTML = promoters.length ? promoters.map((d,i)=>`
+      <div class="leader-item">
+        <span class="leader-rank">${medal[i]}</span>
+        <span class="leader-name">${d.driver}</span>
+        <span class="leader-metric num-good">${fmtNum(d.total)} pacotes · 100%</span>
+      </div>
+    `).join('') : '<div class="empty">Nenhum motorista com 100% das entregas nesse período.</div>';
+
+    $('#offenders-list').innerHTML = offenders.length ? offenders.map((d,i)=>`
+      <div class="leader-item">
+        <span class="leader-rank">${medal[i]}</span>
+        <span class="leader-name">${d.driver}</span>
+        <span class="leader-metric num-bad">${fmtNum(d.failed)} falha${d.failed===1?'':'s'} · ${d.rate.toFixed(1)}% sucesso</span>
+      </div>
+    `).join('') : '<div class="empty">Nenhuma falha registrada.</div>';
+  }
+
+  // wrapper de armazenamento: tenta window.storage (funciona dentro do Claude),
+  // e cai para localStorage do navegador quando essa API não existe
+  // (ex.: arquivo .html aberto direto do computador)
+  async function storageGet(key){
+    try{
+      if(window.storage && typeof window.storage.get === 'function'){
+        return await window.storage.get(key, false);
+      }
+    }catch(e){ /* segue para o fallback */ }
+    try{
+      const raw = localStorage.getItem('painel-rotas:'+key);
+      return raw ? {value: raw} : null;
+    }catch(e){
+      return null;
+    }
+  }
+
+  async function storageSet(key, value){
+    try{
+      if(window.storage && typeof window.storage.set === 'function'){
+        const r = await window.storage.set(key, value, false);
+        if(r) return r;
+      }
+    }catch(e){ /* segue para o fallback */ }
+    try{
+      localStorage.setItem('painel-rotas:'+key, value);
+      return {value};
+    }catch(e){
+      return null;
+    }
+  }
+
+  // reconstrói uma linha no mesmo formato do seed-csv a partir de uma rota já processada
+  function routeToCsvRow(r){
+    const col0 = r.routeCode ? `${r.routeLabel} · ${r.routeCode}` : r.routeLabel;
+    const fields = [
+      col0,
+      r.plate || '',
+      r.vehicle || '',
+      r.branch || '',
+      r.driver || '',
+      `Contact rate: ${r.contactRate}%`,
+      `Totales reclamações: ${r.complaints}`,
+      String(r.total || ''),
+      `${r.pending} pendentes, ${r.failed} com falhas, ${r.success} bem-sucedidos`,
+      '', '', '', '', '',
+      r.start ? `${r.start} h` : '',
+      r.end ? `${r.end} h` : ''
+    ];
+    return fields.join(';');
+  }
+
+  // gera uma cópia do próprio arquivo .html, com os dados atualmente carregados
+  // embutidos como dado padrão — assim os dados ficam salvos no arquivo em si,
+  // sem depender de nenhuma API de armazenamento do navegador
+  function downloadUpdatedHtml(){
+    try{
+      const newCsv = allRoutes.map(routeToCsvRow).join('\n');
+      let html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      html = html.replace(
+        /(<script type="text\/plain" id="seed-csv">)[\s\S]*?(<\/script>)/,
+        (m, open, close) => open + newCsv + close
+      );
+      const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Painel_de_Rotas_SMG2.html';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      status.className = 'import-status ok';
+      status.textContent = '✓ HTML atualizado baixado — use esse arquivo na próxima vez';
+    }catch(err){
+      status.className = 'import-status err';
+      status.textContent = 'Erro ao gerar o HTML atualizado';
+      console.error(err);
+    }
+  }
+
+  function applyFilters(){
+    const term = $('#driver-search').value.trim().toLowerCase();
+    const vehicle = $('#vehicle-filter').value;
+    const filtered = allRoutes.filter(r=>
+      (!term || r.driver.toLowerCase().includes(term)) &&
+      (!vehicle || r.vehicle === vehicle)
+    );
+    renderTable(filtered);
+  }
+
+  function applyRoutes(routes){
+    allRoutes = routes;
+    $('#driver-search').value = '';
+    renderSummary(allRoutes);
+    renderFleet(allRoutes);
+    renderLeaders(allRoutes);
+    populateDriverList(allRoutes);
+    applyFilters();
+  }
+
+  function loadFromRows(rows){
+    const parsed = rows.map(parseRow).filter(r => r.driver && (r.total>0 || r.complaints>0 || r.routeLabel));
+    applyRoutes(parsed);
+  }
+
+  $('#driver-search').addEventListener('input', applyFilters);
+  $('#vehicle-filter').addEventListener('change', applyFilters);
+  $('#btn-clear-filters').addEventListener('click', ()=>{
+    $('#driver-search').value = '';
+    $('#vehicle-filter').value = '';
+    applyFilters();
+  });
+
+  // import handling
+  const fileInput = $('#file-input');
+  const status = $('#import-status');
+  const undoBtn = $('#btn-undo-import');
+  const saveBtn = $('#btn-save-import');
+  let previousRoutes = null;
+  let lastImportedFileName = '';
+
+  // initial load: try previously saved import first, fall back to embedded seed data
+  (async function initialLoad(){
+    try{
+      const saved = await storageGet('last-import');
+      if(saved && saved.value){
+        const data = JSON.parse(saved.value);
+        if(Array.isArray(data.routes) && data.routes.length){
+          allRoutes = [];
+          applyRoutes(data.routes);
+          saveBtn.disabled = false;
+          status.className='import-status ok';
+          status.textContent = '✓ última importação salva carregada' + (data.fileName ? ' ('+data.fileName+')' : '');
+          return;
+        }
+      }
+    }catch(err){
+      // no saved import yet, or storage unavailable — fall back to seed
+    }
+    const seedText = document.getElementById('seed-csv').textContent;
+    loadFromRows(parseCsvText(seedText));
+  })();
+
+  $('#btn-import').addEventListener('click', ()=>fileInput.click());
+
+  fileInput.addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    status.className='import-status';
+    status.textContent='';
+
+    const reader = new FileReader();
+    const isCsv = /\.csv$/i.test(file.name);
+
+    reader.onload = function(evt){
+      try{
+        let rows;
+        if(isCsv){
+          rows = parseCsvText(evt.target.result);
+        } else {
+          const wb = XLSX.read(evt.target.result, {type:'array'});
+          const sheet = wb.Sheets[wb.SheetNames[0]];
+          rows = XLSX.utils.sheet_to_json(sheet, {header:1, raw:false, defval:''})
+            .map(r=>r.map(c=>String(c)))
+            .filter(r=>r.some(c=>c.trim()!==''));
+        }
+        previousRoutes = allRoutes.slice();
+        undoBtn.disabled = false;
+        saveBtn.disabled = false;
+        lastImportedFileName = file.name;
+        loadFromRows(rows);
+        status.className='import-status ok';
+        status.textContent = '✓ '+file.name+' importado';
+      }catch(err){
+        status.className='import-status err';
+        status.textContent = 'Erro ao ler o arquivo';
+        console.error(err);
+      }
+    };
+
+    if(isCsv){ reader.readAsText(file, 'UTF-8'); }
+    else { reader.readAsArrayBuffer(file); }
+
+    fileInput.value = '';
+  });
+
+  undoBtn.addEventListener('click', ()=>{
+    if(!previousRoutes) return;
+    applyRoutes(previousRoutes);
+    previousRoutes = null;
+    undoBtn.disabled = true;
+    status.className='import-status ok';
+    status.textContent = '✓ última importação desfeita';
+  });
+
+  saveBtn.addEventListener('click', async ()=>{
+    try{
+      const payload = JSON.stringify({ fileName: lastImportedFileName, routes: allRoutes });
+      const result = await storageSet('last-import', payload);
+      if(result){
+        status.className='import-status ok';
+        status.textContent = '✓ importação salva para a próxima vez';
+      } else {
+        status.className='import-status err';
+        status.textContent = 'Não foi possível salvar automaticamente — use "Baixar HTML atualizado"';
+      }
+    }catch(err){
+      status.className='import-status err';
+      status.textContent = 'Erro ao salvar — use "Baixar HTML atualizado"';
+      console.error(err);
+    }
+  });
+
+  $('#btn-download-html').addEventListener('click', downloadUpdatedHtml);
+})();
+</script>
+
+
+</body></html>
